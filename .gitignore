@@ -1,0 +1,39 @@
+# Compiled class files
+*.class
+bin/
+
+# Python virtual environment
+myenv/
+venv/
+.env/
+
+# Database files
+*.db
+*.sqlite
+
+# Log files
+*.log
+
+# User data
+user_login.dat
+search_history.txt
+
+# Image cache
+image_cache/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Build output
+build/
+dist/
+out/
