@@ -2,7 +2,7 @@ from PIL import Image
 import os
 
 # 处理当前文件夹
-folder_path = r"C:\Users\素华\Desktop\good新1\good"
+folder_path = r"D:photo"
 
 for filename in os.listdir(folder_path):
     if filename.lower().endswith(".webp"):
