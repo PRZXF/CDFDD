@@ -258,4 +258,26 @@ public class CouponDAO {
         }
         return coupons;
     }
+
+    /**
+     * 获取所有有效优惠券
+     */
+    public List<Coupon> getAllValidCoupons() {
+        List<Coupon> coupons = new ArrayList<>();
+        String sql = "SELECT * FROM coupons WHERE enabled=true AND remaining_quantity > 0 " +
+                "AND start_time <= NOW() AND end_time >= NOW() ORDER BY create_time DESC";
+
+        try (Connection conn = DBUtil.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                coupons.add(mapResultSetToCoupon(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return coupons;
+    }
 }

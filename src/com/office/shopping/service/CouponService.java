@@ -240,4 +240,23 @@ public class CouponService { // 定义优惠券服务类
     public List<Coupon> getProductCoupons(int productId) { // 获取商品专属优惠券方法
         return couponDAO.getProductCoupons(productId); // 调用DAO获取商品专属优惠券
     }
+
+    /**
+     * 获取所有有效优惠券
+     *
+     * @return 所有有效优惠券列表
+     */
+    public List<Coupon> getAllValidCoupons() { // 获取所有有效优惠券方法
+        return couponDAO.getAllValidCoupons(); // 调用DAO获取所有有效优惠券
+    }
+
+    /**
+     * 获取商品专属优惠券（包括全场通用和商品专属）
+     *
+     * @param productId 商品ID
+     * @return 商品可用优惠券列表
+     */
+    public List<Coupon> getCouponsByProductId(int productId) { // 获取商品可用优惠券方法
+        return couponDAO.getProductCoupons(productId); // 调用DAO获取商品专属优惠券
+    }
 }
