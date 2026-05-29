@@ -19,12 +19,12 @@ public class OrderService { // 定义订单服务类
      * 订单数据访问对象
      */
     private OrderDAO orderDAO = new OrderDAO(); // 订单数据访问对象
-    
+
     /**
      * 商品服务对象
      */
     private ProductService productService = new ProductService(); // 商品服务对象
-    
+
     /**
      * 购物车服务对象
      */
@@ -46,7 +46,12 @@ public class OrderService { // 定义订单服务类
         }
 
         // 创建订单对象
-        Order order = new Order(0, buyerId, sellerId, totalAmount, null, "待支付"); // 创建订单对象
+        Order order = new Order(); // 创建订单对象
+        order.setBuyerId(buyerId); // 设置买家ID
+        order.setSellerId(sellerId); // 设置卖家ID
+        order.setTotalAmount(totalAmount); // 设置总金额
+        order.setActualAmount(totalAmount); // 设置实际支付金额（默认等于总金额）
+        order.setStatus("待支付"); // 设置默认状态为待支付
         int orderId = orderDAO.createOrder(order); // 保存订单到数据库
 
         if (orderId > 0) { // 订单创建成功
@@ -88,6 +93,7 @@ public class OrderService { // 定义订单服务类
         order.setBuyerId(buyerId); // 设置买家ID
         order.setSellerId(sellerId); // 设置卖家ID
         order.setTotalAmount(totalAmount); // 设置总金额
+        order.setActualAmount(totalAmount); // 设置实际支付金额（默认等于总金额）
         order.setStatus("待支付"); // 设置默认状态为待支付
 
         // 创建订单

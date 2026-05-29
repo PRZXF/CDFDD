@@ -5,11 +5,13 @@ import com.office.shopping.model.Address;
 import com.office.shopping.model.Coupon;
 import com.office.shopping.model.Product;
 import com.office.shopping.model.User;
+import com.office.shopping.model.UserCoupon;
 import com.office.shopping.service.AddressService;
 import com.office.shopping.service.CartService;
 import com.office.shopping.service.CouponService;
 import com.office.shopping.service.OrderService;
 import com.office.shopping.service.ProductService;
+import com.office.shopping.service.UserCouponService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -53,6 +55,9 @@ public class ProductDetailDialog extends JDialog {
 
     /** 优惠券服务，用于管理优惠券 */
     private CouponService couponService = new CouponService();
+
+    /** 用户优惠券服务，用于管理用户优惠券 */
+    private UserCouponService userCouponService = new UserCouponService();
 
     /**
      * 构造方法
@@ -169,11 +174,31 @@ public class ProductDetailDialog extends JDialog {
         nameLabel.setFont(new Font("宋体", Font.BOLD, 24)); // 设置字体为宋体粗体24号
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT); // 设置左对齐
 
-        // 添加商品价格
+        // 添加商品价格和优惠标签
+        JPanel pricePanel = new JPanel();
+        pricePanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        pricePanel.setBackground(Color.WHITE);
+        pricePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // 检查是否有可用优惠券
+        List<Coupon> validCoupons = couponService.getCouponsByProductId(product.getId());
+        boolean hasDiscount = validCoupons != null && !validCoupons.isEmpty();
+
         JLabel priceLabel = new JLabel("价格: ¥" + product.getPrice()); // 创建价格标签
         priceLabel.setFont(new Font("宋体", Font.PLAIN, 20)); // 设置字体为宋体20号
         priceLabel.setForeground(Color.RED); // 设置字体颜色为红色
-        priceLabel.setAlignmentX(Component.LEFT_ALIGNMENT); // 设置左对齐
+        pricePanel.add(priceLabel);
+
+        if (hasDiscount) {
+            pricePanel.add(Box.createHorizontalStrut(10));
+            JLabel discountTag = new JLabel("优惠");
+            discountTag.setFont(new Font("微软雅黑", Font.BOLD, 14));
+            discountTag.setForeground(Color.WHITE);
+            discountTag.setOpaque(true);
+            discountTag.setBackground(new Color(255, 102, 0));
+            discountTag.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
+            pricePanel.add(discountTag);
+        }
 
         // 添加商品库存
         JLabel stockLabel = new JLabel("库存: " + product.getStock()); // 创建库存标签
@@ -195,7 +220,7 @@ public class ProductDetailDialog extends JDialog {
         infoPanel.add(Box.createVerticalStrut(10)); // 添加10像素垂直间距
         infoPanel.add(nameLabel); // 添加商品名称标签
         infoPanel.add(Box.createVerticalStrut(15)); // 添加15像素垂直间距
-        infoPanel.add(priceLabel); // 添加价格标签
+        infoPanel.add(pricePanel); // 添加价格面板
         infoPanel.add(Box.createVerticalStrut(10)); // 添加10像素垂直间距
         infoPanel.add(stockLabel); // 添加库存标签
         infoPanel.add(Box.createVerticalStrut(10)); // 添加10像素垂直间距
@@ -288,6 +313,17 @@ public class ProductDetailDialog extends JDialog {
             quantityPanel.add(quantityLabel); // 添加数量标签
             quantityPanel.add(quantitySpinner); // 添加数量选择器
             buttonPanel.add(quantityPanel); // 添加数量面板到按钮面板
+
+            // 添加领取优惠券按钮（如果有可用优惠券）
+            if (hasDiscount && currentUser != null && currentUser.getId() != 0
+                    && !"guest".equals(currentUser.getUsername())) {
+                JButton receiveCouponButton = new JButton("领取优惠券");
+                ButtonStyle.setWarningStyle(receiveCouponButton);
+                receiveCouponButton.setPreferredSize(new Dimension(120, 36));
+                receiveCouponButton.addActionListener(e -> showReceiveCouponDialog(validCoupons));
+                buttonPanel.add(receiveCouponButton);
+                buttonPanel.add(Box.createHorizontalStrut(10));
+            }
 
             // 创建加入购物车按钮
             JButton addToCartButton = new JButton("加入购物车"); // 创建按钮
@@ -953,5 +989,77 @@ public class ProductDetailDialog extends JDialog {
                 addressArray, // 选项数组
                 addressArray[0]); // 默认选中项
         return selected; // 返回用户选择的地址
+    }
+
+    /**
+     * 显示领取优惠券对话框
+     *
+     * @param coupons 优惠券列表
+     */
+    private void showReceiveCouponDialog(List<Coupon> coupons) {
+        JDialog couponDialog = new JDialog(this, "领取优惠券", true);
+        couponDialog.setSize(500, 400);
+        couponDialog.setLocationRelativeTo(this);
+        couponDialog.setLayout(new BorderLayout());
+        couponDialog.getContentPane().setBackground(new Color(245, 245, 245));
+
+        // 标题
+        JLabel titleLabel = new JLabel("选择要领取的优惠券", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("微软雅黑", Font.BOLD, 18));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        couponDialog.add(titleLabel, BorderLayout.NORTH);
+
+        // 优惠券列表
+        String[] columnNames = {"优惠券名称", "类型", "优惠内容"};
+        Object[][] data = new Object[coupons.size()][3];
+        for (int i = 0; i < coupons.size(); i++) {
+            Coupon c = coupons.get(i);
+            data[i][0] = c.getName();
+            data[i][1] = "discount".equals(c.getType()) ? "打折券" : "现金券";
+            if ("discount".equals(c.getType())) {
+                data[i][2] = c.getDiscount() + "折";
+            } else {
+                data[i][2] = "减¥" + c.getCashAmount() + " (满¥" + c.getMinAmount() + ")";
+            }
+        }
+
+        JTable couponTable = new JTable(data, columnNames);
+        couponTable.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        couponTable.setRowHeight(35);
+        couponTable.getColumnModel().getColumn(0).setPreferredWidth(150);
+        couponTable.getColumnModel().getColumn(1).setPreferredWidth(80);
+        couponTable.getColumnModel().getColumn(2).setPreferredWidth(200);
+        couponTable.setEnabled(true);
+        couponTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        JScrollPane scrollPane = new JScrollPane(couponTable);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        couponDialog.add(scrollPane, BorderLayout.CENTER);
+
+        // 按钮面板
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+        JButton receiveButton = new JButton("领取选中优惠券");
+        ButtonStyle.setPrimaryStyle(receiveButton);
+        receiveButton.addActionListener(e -> {
+            int selectedRow = couponTable.getSelectedRow();
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(couponDialog, "请先选择要领取的优惠券");
+                return;
+            }
+            Coupon selectedCoupon = coupons.get(selectedRow);
+            userCouponService.receiveCoupon(currentUser.getId(), selectedCoupon.getId());
+            JOptionPane.showMessageDialog(couponDialog, "优惠券领取成功！");
+            couponDialog.dispose();
+        });
+        buttonPanel.add(receiveButton);
+
+        JButton cancelButton = new JButton("取消");
+        ButtonStyle.setDefaultStyle(cancelButton);
+        cancelButton.addActionListener(e -> couponDialog.dispose());
+        buttonPanel.add(cancelButton);
+
+        couponDialog.add(buttonPanel, BorderLayout.SOUTH);
+        couponDialog.setVisible(true);
     }
 }

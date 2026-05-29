@@ -1024,7 +1024,11 @@ public class MainPanel extends JPanel {
         infoPanel.setBackground(Color.WHITE); // 设置白色背景
 
         // 商品名称
-        JLabel nameLabel = new JLabel(product.getName()); // 创建名称标签
+        String productName = product.getName();
+        if (productName.length() > 6) {
+            productName = productName.substring(0, 6) + "...";
+        }
+        JLabel nameLabel = new JLabel(productName); // 创建名称标签
         nameLabel.setFont(new Font("微软雅黑", Font.BOLD, 16)); // 设置字体
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT); // 左对齐
 

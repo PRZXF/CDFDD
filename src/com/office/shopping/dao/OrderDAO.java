@@ -7,6 +7,7 @@ import com.office.shopping.util.DBUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -26,14 +27,40 @@ public class OrderDAO {
      * @return 订单ID，失败返回-1
      */
     public int createOrder(Order order) {
-        // SQL插入语句，插入买家ID、卖家ID、总金额和状态
-        String sql = "INSERT INTO orders (buyer_id, seller_id, total_amount, status) VALUES (?, ?, ?, ?)";
+        // 先检查表结构是否有actual_amount字段
+        boolean hasActualAmount = false;
+        try (Connection conn = DBUtil.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM orders LIMIT 1")) {
+            ResultSet rs = pstmt.executeQuery();
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            for (int i = 1; i <= columnCount; i++) {
+                if ("actual_amount".equals(metaData.getColumnName(i))) {
+                    hasActualAmount = true;
+                    break;
+                }
+            }
+        } catch (SQLException e) {
+            // 检查失败，默认没有actual_amount字段
+        }
+
+        String sql;
+        if (hasActualAmount) {
+            sql = "INSERT INTO orders (buyer_id, seller_id, total_amount, actual_amount, status) VALUES (?, ?, ?, ?, ?)";
+        } else {
+            sql = "INSERT INTO orders (buyer_id, seller_id, total_amount, status) VALUES (?, ?, ?, ?)";
+        }
+
         try (Connection conn = DBUtil.getConnection(); // 获取数据库连接
                 PreparedStatement pstmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) { // 创建预编译语句
             pstmt.setInt(1, order.getBuyerId()); // 设置买家ID参数
             pstmt.setInt(2, order.getSellerId()); // 设置卖家ID参数
             pstmt.setDouble(3, order.getTotalAmount()); // 设置订单总金额
-            pstmt.setString(4, order.getStatus()); // 设置订单状态
+            int paramIndex = 4;
+            if (hasActualAmount) {
+                pstmt.setDouble(paramIndex++, order.getActualAmount()); // 设置实际支付金额
+            }
+            pstmt.setString(paramIndex, order.getStatus()); // 设置订单状态
             pstmt.executeUpdate(); // 执行插入操作
 
             // 获取生成的订单ID
@@ -81,13 +108,28 @@ public class OrderDAO {
                 PreparedStatement pstmt = conn.prepareStatement(sql)) { // 创建预编译语句
             pstmt.setInt(1, buyerId); // 设置买家ID参数
             ResultSet rs = pstmt.executeQuery(); // 执行查询
+
+            // 检查是否有actual_amount字段
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            boolean hasActualAmount = false;
+            for (int i = 1; i <= columnCount; i++) {
+                if ("actual_amount".equals(metaData.getColumnName(i))) {
+                    hasActualAmount = true;
+                    break;
+                }
+            }
+
             while (rs.next()) { // 遍历结果集
+                double totalAmount = rs.getDouble("total_amount"); // 总金额
+                double actualAmount = hasActualAmount ? rs.getDouble("actual_amount") : totalAmount;
                 // 从数据库结果集创建订单对象
                 Order order = new Order(
                         rs.getInt("id"), // 订单ID
                         rs.getInt("buyer_id"), // 买家ID
                         rs.getInt("seller_id"), // 卖家ID
-                        rs.getDouble("total_amount"), // 总金额
+                        totalAmount, // 总金额
+                        actualAmount, // 实际支付金额
                         rs.getTimestamp("order_date"), // 订单日期
                         rs.getString("status") // 订单状态
                 );
@@ -116,13 +158,28 @@ public class OrderDAO {
                 PreparedStatement pstmt = conn.prepareStatement(sql)) { // 创建预编译语句
             pstmt.setInt(1, sellerId); // 设置卖家ID参数
             ResultSet rs = pstmt.executeQuery(); // 执行查询
+
+            // 检查是否有actual_amount字段
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            boolean hasActualAmount = false;
+            for (int i = 1; i <= columnCount; i++) {
+                if ("actual_amount".equals(metaData.getColumnName(i))) {
+                    hasActualAmount = true;
+                    break;
+                }
+            }
+
             while (rs.next()) { // 遍历结果集
+                double totalAmount = rs.getDouble("total_amount"); // 总金额
+                double actualAmount = hasActualAmount ? rs.getDouble("actual_amount") : totalAmount;
                 // 从数据库结果集创建订单对象
                 Order order = new Order(
                         rs.getInt("id"), // 订单ID
                         rs.getInt("buyer_id"), // 买家ID
                         rs.getInt("seller_id"), // 卖家ID
-                        rs.getDouble("total_amount"), // 总金额
+                        totalAmount, // 总金额
+                        actualAmount, // 实际支付金额
                         rs.getTimestamp("order_date"), // 订单日期
                         rs.getString("status") // 订单状态
                 );

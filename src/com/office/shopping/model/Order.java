@@ -29,6 +29,11 @@ public class Order { // 定义Order类
     private double totalAmount; // 订单总金额字段
 
     /**
+     * 实际支付金额（优惠后）
+     */
+    private double actualAmount; // 实际支付金额字段
+
+    /**
      * 订单创建日期
      */
     private Date orderDate; // 订单创建日期字段
@@ -62,6 +67,28 @@ public class Order { // 定义Order类
     /**
      * 完整构造方法
      *
+     * @param id           订单ID
+     * @param buyerId      买家ID
+     * @param sellerId     卖家ID
+     * @param totalAmount  订单总金额
+     * @param actualAmount 实际支付金额
+     * @param orderDate    订单创建日期
+     * @param status       订单状态
+     */
+    public Order(int id, int buyerId, int sellerId, double totalAmount, double actualAmount, Date orderDate,
+            String status) { // 带参数构造方法
+        this.id = id; // 设置订单ID
+        this.buyerId = buyerId; // 设置买家ID
+        this.sellerId = sellerId; // 设置卖家ID
+        this.totalAmount = totalAmount; // 设置订单总金额
+        this.actualAmount = actualAmount; // 设置实际支付金额
+        this.orderDate = orderDate; // 设置订单创建日期
+        this.status = status; // 设置订单状态
+    }
+
+    /**
+     * 完整构造方法（保留向后兼容）
+     *
      * @param id          订单ID
      * @param buyerId     买家ID
      * @param sellerId    卖家ID
@@ -70,12 +97,7 @@ public class Order { // 定义Order类
      * @param status      订单状态
      */
     public Order(int id, int buyerId, int sellerId, double totalAmount, Date orderDate, String status) { // 带参数构造方法
-        this.id = id; // 设置订单ID
-        this.buyerId = buyerId; // 设置买家ID
-        this.sellerId = sellerId; // 设置卖家ID
-        this.totalAmount = totalAmount; // 设置订单总金额
-        this.orderDate = orderDate; // 设置订单创建日期
-        this.status = status; // 设置订单状态
+        this(id, buyerId, sellerId, totalAmount, totalAmount, orderDate, status); // 调用新构造方法，actualAmount默认等于totalAmount
     }
 
     /**
@@ -148,6 +170,24 @@ public class Order { // 定义Order类
      */
     public void setTotalAmount(double totalAmount) { // 设置订单总金额方法
         this.totalAmount = totalAmount; // 设置订单总金额
+    }
+
+    /**
+     * 获取实际支付金额
+     *
+     * @return 实际支付金额
+     */
+    public double getActualAmount() { // 获取实际支付金额方法
+        return actualAmount; // 返回实际支付金额
+    }
+
+    /**
+     * 设置实际支付金额
+     *
+     * @param actualAmount 实际支付金额
+     */
+    public void setActualAmount(double actualAmount) { // 设置实际支付金额方法
+        this.actualAmount = actualAmount; // 设置实际支付金额
     }
 
     /**

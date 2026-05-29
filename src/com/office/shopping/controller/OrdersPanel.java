@@ -248,7 +248,31 @@ public class OrdersPanel extends JPanel { // 定义订单面板类
         JPanel totalPanel = new JPanel(); // 创建总金额面板
         totalPanel.setLayout(new FlowLayout(FlowLayout.LEFT)); // 设置流式布局，左对齐
         totalPanel.setBackground(Color.LIGHT_GRAY); // 设置浅灰色背景
-        totalPanel.add(new JLabel("订单总金额: ¥" + order.getTotalAmount())); // 添加总金额标签
+
+        double totalAmount = order.getTotalAmount();
+        double actualAmount = order.getActualAmount();
+
+        if (actualAmount < totalAmount) {
+            JLabel originalPriceLabel = new JLabel("原价: ¥" + String.format("%.2f", totalAmount));
+            originalPriceLabel.setForeground(Color.GRAY);
+            originalPriceLabel.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+            originalPriceLabel.setText("<html><s>原价: ¥" + String.format("%.2f", totalAmount) + "</s></html>");
+            totalPanel.add(originalPriceLabel);
+
+            totalPanel.add(Box.createHorizontalStrut(10));
+
+            JLabel actualPriceLabel = new JLabel("优惠价: ¥" + String.format("%.2f", actualAmount));
+            actualPriceLabel.setForeground(new Color(255, 102, 0));
+            actualPriceLabel.setFont(new Font("微软雅黑", Font.BOLD, 14));
+            totalPanel.add(actualPriceLabel);
+
+            JLabel discountLabel = new JLabel(" 节省 ¥" + String.format("%.2f", totalAmount - actualAmount));
+            discountLabel.setForeground(Color.RED);
+            discountLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+            totalPanel.add(discountLabel);
+        } else {
+            totalPanel.add(new JLabel("订单总金额: ¥" + String.format("%.2f", totalAmount)));
+        }
         footerPanel.add(totalPanel, BorderLayout.WEST); // 添加总金额面板到西部
 
         // 操作按钮

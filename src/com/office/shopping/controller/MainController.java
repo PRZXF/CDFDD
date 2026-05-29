@@ -1,6 +1,7 @@
 package com.office.shopping.controller; // 声明包名
 
 import com.office.shopping.model.User; // 导入用户模型类
+import com.office.shopping.service.UserCouponService; // 导入用户优惠券服务类
 import com.office.shopping.util.ButtonStyle; // 导入按钮样式工具类
 import com.office.shopping.util.LocalStorage; // 导入本地存储工具类
 
@@ -83,6 +84,10 @@ public class MainController { // 定义主控制器类
      * </p>
      */
     public MainController() { // 构造方法
+        // 初始化用户优惠券表
+        UserCouponService userCouponService = new UserCouponService();
+        userCouponService.initTable();
+
         // 创建主窗口
         frame = new JFrame("易办购"); // 创建主窗口，设置标题
         frame.setSize(1280, 900); // 设置窗口大小，确保能显示15个商品（5行3列）
